@@ -43,12 +43,19 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Ensure we're up-to-date before pushing
-          git pull --rebase
-
-          # Commit if there are changes
+          # Stage changes
           git add -A
-          git diff --cached --quiet || git commit -m "Update data from scraper [skip ci]"
 
-          # Push (no-op if nothing to commit)
-          git push
+          # Commit only if there are staged changes
+          if ! git diff --cached --quiet; then
+            git commit -m "Update data from scraper [skip ci]"
+
+            # Rebase our new commit(s) onto the latest main (autostash if anything else changed)
+            git pull --rebase --autostash origin main
+
+            # Push our rebased commit(s)
+            git push origin HEAD:main
+          else
+            echo "No changes to commit."
+          fi
+
