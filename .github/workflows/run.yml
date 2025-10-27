@@ -1,11 +1,17 @@
-# .github/workflows/run-scraper.yml
 name: Run scraper on schedule
 
 on:
   schedule:
     - cron: "0 19 * * *"   # 5:00 AM Melbourne (AEST, UTC+10)
     - cron: "0 2 * * 1-5"  # 12:00 PM Melbourne weekdays (AEST, UTC+10)
-  workflow_dispatch: {}     # manual trigger
+  workflow_dispatch: {}
+
+permissions:
+  contents: write  # needed to push with GITHUB_TOKEN
+
+concurrency:
+  group: scraper-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   scrape:
@@ -14,6 +20,9 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          ref: main            # <- set to the branch you want to push to
+          fetch-depth: 0       # ensures history for rebase/merge
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -27,5 +36,19 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run scraper
+        run: python scraper.py
+
+      - name: Commit and push changes
         run: |
-          python scraper.py
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Ensure we're up-to-date before pushing
+          git pull --rebase
+
+          # Commit if there are changes
+          git add -A
+          git diff --cached --quiet || git commit -m "Update data from scraper [skip ci]"
+
+          # Push (no-op if nothing to commit)
+          git push
