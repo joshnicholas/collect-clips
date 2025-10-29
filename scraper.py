@@ -122,10 +122,10 @@ for count in range(1, 2):
         except:
             standfirst = ""
 
-        record = {"Title": thingo.text,
-                "Url": "https://www.theguardian.com" +thingo.a['href'],
-                "Standfirst": standfirst, 
-                "Date": datto }
+        record = {"title": thingo.text,
+                "link": "https://www.theguardian.com" +thingo.a['href'],
+                "description": standfirst, 
+                "published": datto }
 
         records.append(record)
 
@@ -133,8 +133,8 @@ for count in range(1, 2):
     old = pd.read_csv('fs/combined.csv')
     
     tog = pd.concat([old, new])
-    tog.sort_values(by=['Date'], ascending=False, inplace=True)
-    tog.drop_duplicates(subset=['Url'], inplace=True)
+    tog.sort_values(by=['published'], ascending=False, inplace=True)
+    tog.drop_duplicates(subset=['link'], inplace=True)
 
     dumper('fs', 'combined', tog)
     # dumper('fs', f"page_{count}", new)
