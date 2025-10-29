@@ -115,17 +115,26 @@ for count in range(1, 2):
         # print(thingo.a['href'])
 
         datto = datetime.datetime.strptime("-".join(re.search(r"/(\d{4})/([a-z]{3})/(\d{1,2})/",thingo.a['href']).groups()), "%Y-%b-%d").strftime("%Y-%m-%d")
-        try:
-            standfirst = thingo.find("div", class_='dcr-oi4shr').text
-        # print(standfirst.text)
-            # print(standfirst)
-        except:
-            standfirst = ""
+        r2 = requests.get(f"https://www.theguardian.com{thingo.a['href']}")
 
-        record = {"title": thingo.text,
+        new_soup = bs(r2.text, 'html.parser')
+
+        standfirst = new_soup.find('div', attrs={"style":"--grid-area:standfirst"}).text.replace("\n", " ").strip()
+
+        contributors = new_soup.find("address", attrs={"aria-label": "Contributor info"}).text.replace("\n", " ").strip()
+
+        title = thingo.a['aria-label'].replace("– Full Story podcast", " ").replace("\n", " ").strip()
+
+        # print(title)
+
+        # print(find.text)
+        # print(contributors.text)
+
+        record = {"title": title,
                 "link": "https://www.theguardian.com" +thingo.a['href'],
                 "description": standfirst, 
-                "published": datto }
+                "published": datto,
+                "contributors": contributors }
 
         records.append(record)
 
