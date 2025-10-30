@@ -54,9 +54,9 @@ def search_similar(df,
                 return True
         return False
 
-    mask = df[columns].applymap(is_similar).any(axis=1)
+    mask = df[columns].map(is_similar).any(axis=1)
     result = df[mask].copy()
-    result['published'] = pd.to_datetime(result['published']).dt.strftime("%d/%b/%Y")
+    result['published'] = pd.to_datetime(result['published']).dt.strftime("%d/%m/%Y")
     return result
 
 
@@ -77,7 +77,7 @@ def index():
             <option value="archive" selected>Full story archive</option>
           </select>
 
-          <label for="threshold" style="font-size:0.9em;color:#333;">Match threshold:</label>
+          <label for="threshold" style="font-size:0.9em;color:#333;">How closely should the search algorithm match?</label>
           <select id="threshold" name="threshold" style="padding:10px 12px;border:1px solid #ddd;">
             <option value="0.4">Loose (0.4)</option>
             <option value="0.6" selected>Normal (0.6)</option>
@@ -110,7 +110,9 @@ def searcher():
 
     df = youtube if search_type == "youtube" else archive
 
-    results = search_similar(df, [query], ["title", "description"], threshold=threshold)
+    cols = ["title", "description", 'Pub'] if search_type == 'youtube' else ["title", "description", 'contributors']
+
+    results = search_similar(df, [query], cols, threshold=threshold)
 
     if results.empty:
         return f"<p style='font-family:sans-serif;text-align:center;'>No results found for <b>{query}</b>.</p>"
